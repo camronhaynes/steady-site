@@ -292,6 +292,25 @@ h2.section-title:first-child { margin-top: 0; }
 .foot-exercise h4 { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
 .foot-exercise p { font-size: 12px; color: var(--text-dim); }
 .foot-exercise .reps { font-size: 11px; color: var(--accent); margin-top: 4px; }
+
+/* Time-aware glow */
+.schedule-block.now {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(201,169,110,0.15);
+}
+.schedule-block.now > h3::after {
+  content: ' \2190 YOU ARE HERE';
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 1px;
+  margin-left: 8px;
+}
+.schedule-block.past { opacity: 0.5; }
+.schedule-block.past > h3::after {
+  content: ' \2713';
+  color: var(--text-dim);
+  font-size: 10px;
+}
 </style>
 </head>
 <body>
@@ -313,7 +332,7 @@ h2.section-title:first-child { margin-top: 0; }
 <!-- ==================== DAILY PRACTICE ==================== -->
 <div id="daily" class="page active">
 
-  <div class="schedule-block">
+  <div class="schedule-block" data-time="morning">
     <h3>WAKE &mdash; 6:30 AM</h3>
 
     <div class="card">
@@ -389,7 +408,7 @@ h2.section-title:first-child { margin-top: 0; }
     </div>
   </div>
 
-  <div class="schedule-block">
+  <div class="schedule-block" data-time="midday">
     <h3>MIDDAY &mdash; While Working</h3>
 
     <div class="card">
@@ -445,7 +464,7 @@ h2.section-title:first-child { margin-top: 0; }
     </div>
   </div>
 
-  <div class="schedule-block">
+  <div class="schedule-block" data-time="lift">
     <h3>LIFT DAYS &mdash; After Work</h3>
     <div class="time">Mon / Tue / Thu / Fri</div>
 
@@ -511,7 +530,7 @@ h2.section-title:first-child { margin-top: 0; }
     </div>
   </div>
 
-  <div class="schedule-block">
+  <div class="schedule-block" data-time="evening">
     <h3>EVENING &mdash; Before Bed</h3>
     <div class="time">15 min</div>
 
@@ -1239,6 +1258,32 @@ h2.section-title:first-child { margin-top: 0; }
 </div>
 
 <script>
+// Time awareness — highlight current block
+function updateTimeBlock() {
+  var h = new Date().getHours();
+  var blocks = document.querySelectorAll('.schedule-block[data-time]');
+  blocks.forEach(function(b) { b.classList.remove('now','past'); });
+
+  blocks.forEach(function(b) {
+    var t = b.dataset.time;
+    if (t === 'morning') {
+      if (h >= 6 && h < 9) b.classList.add('now');
+      else if (h >= 9) b.classList.add('past');
+    } else if (t === 'midday') {
+      if (h >= 9 && h < 17) b.classList.add('now');
+      else if (h >= 17) b.classList.add('past');
+    } else if (t === 'lift') {
+      if (h >= 17 && h < 20) b.classList.add('now');
+      else if (h >= 20) b.classList.add('past');
+    } else if (t === 'evening') {
+      if (h >= 20 || h < 1) b.classList.add('now');
+      else if (h >= 1 && h < 6) b.classList.add('past');
+    }
+  });
+}
+updateTimeBlock();
+setInterval(updateTimeBlock, 60000);
+
 function show(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
