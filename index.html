@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>STEADY</title>
+<title>ST34DY</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #0a0a0a;
@@ -19,6 +20,75 @@
   --red: #c94e4e;
   --green: #4ec96e;
   --blue: #4e8ac9;
+}
+@keyframes flow {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33% { transform: translate(30px, -50px) rotate(120deg) scale(1.1); }
+  66% { transform: translate(-20px, 20px) rotate(240deg) scale(0.9); }
+  100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+}
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.06; }
+  50% { transform: translate(-40px, 30px) scale(1.2); opacity: 0.1; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.06; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.08; }
+}
+.bg-flow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-flow .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+.bg-flow .orb:nth-child(1) {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(201,169,110,0.25) 0%, transparent 70%);
+  top: -50px; right: -80px;
+  animation: flow 20s ease-in-out infinite;
+}
+.bg-flow .orb:nth-child(2) {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(78,138,201,0.18) 0%, transparent 70%);
+  bottom: 20%; left: -100px;
+  animation: drift 25s ease-in-out infinite;
+}
+.bg-flow .orb:nth-child(3) {
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(78,201,110,0.15) 0%, transparent 70%);
+  top: 40%; right: -60px;
+  animation: flow 30s ease-in-out infinite reverse;
+}
+.bg-flow .orb:nth-child(4) {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(201,78,78,0.12) 0%, transparent 70%);
+  bottom: -80px; left: 30%;
+  animation: drift 22s ease-in-out infinite reverse;
+}
+.bg-flow .wave {
+  position: absolute;
+  bottom: 0;
+  left: -50%;
+  width: 200%;
+  height: 200px;
+  background: linear-gradient(180deg, transparent 0%, rgba(201,169,110,0.08) 100%);
+  border-radius: 50% 50% 0 0;
+  animation: pulse 8s ease-in-out infinite;
+}
+.bg-flow .wave:nth-child(6) {
+  height: 150px;
+  animation: pulse 12s ease-in-out infinite 2s;
+  background: linear-gradient(180deg, transparent 0%, rgba(78,138,201,0.06) 100%);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -74,6 +144,133 @@ nav button.active {
 .page { display: none; padding: 16px; }
 .page.active { display: block; }
 
+/* Zone counter */
+.zone-counter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.zone-pill {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.zone-pill .zone-name {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.zone-pill .zone-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.zone-pill.hit .zone-count { color: var(--green); }
+.zone-pill.hot { border-color: var(--accent); }
+
+.week-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+/* Log button on exercise cards */
+.log-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.log-btn:active {
+  background: var(--accent);
+  color: var(--bg);
+}
+.log-btn.logged {
+  background: var(--green);
+  color: var(--bg);
+  border-color: var(--green);
+}
+
+/* Time-aware glow */
+.schedule-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.schedule-block h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.schedule-block .time {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.schedule-block.now {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(201,169,110,0.15);
+}
+.schedule-block.now > h3::after {
+  content: ' \2190 YOU ARE HERE';
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 1px;
+  margin-left: 8px;
+}
+.schedule-block.past { opacity: 0.5; }
+.schedule-block.past > h3::after {
+  content: ' \2713';
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.schedule-item {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+}
+.schedule-item:last-child { border-bottom: none; }
+.schedule-item .num {
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 20px;
+}
+.schedule-item .dur {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -105,9 +302,7 @@ nav button.active {
 .card.open .card-body { display: block; }
 .card.open .card-header { border-bottom: 1px solid var(--border); }
 
-.phase {
-  margin-top: 12px;
-}
+.phase { margin-top: 12px; }
 .phase-label {
   font-size: 11px;
   font-weight: 600;
@@ -152,46 +347,6 @@ nav button.active {
 .symptom-row:last-child { border-bottom: none; }
 .symptom-row .feel { font-size: 13px; font-weight: 500; color: var(--text); }
 .symptom-row .exercises { font-size: 12px; color: var(--accent-dim); margin-top: 2px; }
-
-.schedule-block {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
-}
-.schedule-block h3 {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-.schedule-block .time {
-  font-size: 11px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-}
-.schedule-item {
-  display: flex;
-  gap: 12px;
-  padding: 6px 0;
-  font-size: 13px;
-  border-bottom: 1px solid var(--border);
-  align-items: baseline;
-}
-.schedule-item:last-child { border-bottom: none; }
-.schedule-item .num {
-  color: var(--accent);
-  font-weight: 600;
-  min-width: 20px;
-}
-.schedule-item .dur {
-  color: var(--text-dim);
-  font-size: 11px;
-  margin-left: auto;
-  white-space: nowrap;
-}
 
 h2.section-title {
   font-size: 12px;
@@ -260,20 +415,6 @@ h2.section-title:first-child { margin-top: 0; }
   color: var(--accent);
 }
 
-.monkey-level {
-  display: flex;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-.monkey-level:last-child { border-bottom: none; }
-.monkey-level .lvl {
-  color: var(--accent);
-  font-weight: 600;
-  min-width: 24px;
-}
-
 .info-block {
   font-size: 13px;
   color: var(--text-dim);
@@ -293,375 +434,218 @@ h2.section-title:first-child { margin-top: 0; }
 .foot-exercise p { font-size: 12px; color: var(--text-dim); }
 .foot-exercise .reps { font-size: 11px; color: var(--accent); margin-top: 4px; }
 
-/* Time-aware glow */
-.schedule-block.now {
-  border-color: var(--accent);
-  box-shadow: 0 0 12px rgba(201,169,110,0.15);
+.monkey-level {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
 }
-.schedule-block.now > h3::after {
-  content: ' \2190 YOU ARE HERE';
-  font-size: 9px;
-  color: var(--green);
-  letter-spacing: 1px;
-  margin-left: 8px;
+.monkey-level:last-child { border-bottom: none; }
+.monkey-level .lvl {
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 24px;
 }
-.schedule-block.past { opacity: 0.5; }
-.schedule-block.past > h3::after {
-  content: ' \2713';
+
+/* History */
+.history-day {
+  margin-bottom: 16px;
+}
+.history-date {
+  font-size: 11px;
   color: var(--text-dim);
-  font-size: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
 }
+.history-entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.history-entry:last-child { border-bottom: none; }
+.history-entry .h-zone { color: var(--accent); }
+.history-entry .h-exercise { color: var(--text-dim); }
+.history-entry .h-time { color: var(--text-dim); font-size: 10px; }
 </style>
 </head>
 <body>
 
+<div class="bg-flow">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="wave"></div>
+  <div class="wave"></div>
+</div>
+
 <header>
-  <h1>STEADY</h1>
+  <h1>ST34DY</h1>
   <p>MIND + IRON + RESOLVE</p>
 </header>
 
-<nav id="nav">
+<nav>
   <button class="active" onclick="show('daily')">DAILY</button>
   <button onclick="show('symptoms')">SYMPTOMS</button>
   <button onclick="show('exercises')">EXERCISES</button>
   <button onclick="show('iron')">IRON</button>
   <button onclick="show('feet')">FEET</button>
   <button onclick="show('bars')">BARS</button>
+  <button onclick="show('history')">LOG</button>
 </nav>
 
-<!-- ==================== DAILY PRACTICE ==================== -->
+<!-- ==================== DAILY ==================== -->
 <div id="daily" class="page active">
 
-  <div class="schedule-block" data-time="morning">
-    <h3>WAKE &mdash; 6:30 AM</h3>
+  <div class="week-label" id="weekLabel">THIS WEEK</div>
+  <div class="zone-counter" id="zoneCounter">
+    <div class="zone-pill" data-zone="zone1"><div class="zone-name">Adductors</div><div class="zone-count" id="zc-zone1">0</div></div>
+    <div class="zone-pill" data-zone="zone2"><div class="zone-name">SI / Rot</div><div class="zone-count" id="zc-zone2">0</div></div>
+    <div class="zone-pill" data-zone="zone3"><div class="zone-name">Psoas</div><div class="zone-count" id="zc-zone3">0</div></div>
+    <div class="zone-pill" data-zone="zone4"><div class="zone-name">Quads</div><div class="zone-count" id="zc-zone4">0</div></div>
+    <div class="zone-pill" data-zone="zone5"><div class="zone-name">Hams</div><div class="zone-count" id="zc-zone5">0</div></div>
+    <div class="zone-pill" data-zone="zone6"><div class="zone-name">Calves</div><div class="zone-count" id="zc-zone6">0</div></div>
+    <div class="zone-pill" data-zone="zone7"><div class="zone-name">Shins</div><div class="zone-count" id="zc-zone7">0</div></div>
+    <div class="zone-pill" data-zone="feet"><div class="zone-name">Feet</div><div class="zone-count" id="zc-feet">0</div></div>
+  </div>
 
+  <div id="todayZone" onclick="goToTodayExercises()" style="font-size:16px;font-weight:600;color:var(--accent);margin-bottom:16px;padding:16px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;text-align:center;cursor:pointer;"></div>
+
+  <div class="schedule-block" data-time="morning">
+    <h3>WAKE</h3>
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>1. Meditation</h3>
-        <span class="zone-tag">10 min</span>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>1. Meditation</h3><span class="zone-tag">10 min</span></div>
       <div class="card-body">
         <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
           <li>Sit up. Eyes closed. No phone. No input.</li>
           <li>Breathe through the nose. Watch the breath.</li>
-          <li>When the mind pulls toward the pain, toward the day, toward the nerve &mdash; notice it, let it pass.</li>
-          <li>This is Layer 5. The nervous system has been surveilling your pelvic floor for 8 years. This teaches it to stop.</li>
+          <li>When the mind pulls toward pain — notice it, let it pass.</li>
         </ul>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>2. Foot Work</h3>
-        <span class="zone-tag">5 min</span>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>2. Foot Work</h3><span class="zone-tag">5 min</span></div>
       <div class="card-body">
-        <div class="phase"><div class="phase-label recruit">SHORT FOOT</div><p>Standing. Lift arch by pulling ball of foot toward heel &mdash; toes stay flat, don't curl. Hold 5 sec. 10 each foot.</p></div>
-        <div class="phase"><div class="phase-label retain">TOWEL SCRUNCHES</div><p>Towel on floor. Curl toes to scrunch it toward you. 2 min continuous.</p></div>
-        <div class="phase"><div class="phase-label release">TOE YOGA</div><p>Lift big toe only, press small toes down. Then reverse. 10 each pattern.</p></div>
-        <div class="phase"><div class="phase-label recruit">SINGLE LEG BALANCE</div><p>Stand on one foot. Feel the arch work. 30 sec each foot.</p></div>
-        <div class="note">Flat feet = no arch = posterior chain has no foundation. Building the feet builds the floor under the floor.</div>
+        <div class="phase"><div class="phase-label recruit">SHORT FOOT</div><p>Lift arch, pull ball toward heel, toes flat. Hold 5 sec. 10 each.</p></div>
+        <div class="phase"><div class="phase-label retain">TOWEL SCRUNCHES</div><p>Curl toes to scrunch towel toward you. 2 min.</p></div>
+        <div class="phase"><div class="phase-label release">TOE YOGA</div><p>Big toe up / small toes down, then reverse. 10 each.</p></div>
+        <div class="phase"><div class="phase-label recruit">BALANCE</div><p>Single leg, 30 sec each. Feel the arch work.</p></div>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>3. Crocodile Breathing + Reverse Kegels</h3>
-        <span class="zone-tag">5 min</span>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>3. Crocodile Breathing + Reverse Kegels</h3><span class="zone-tag">5 min</span></div>
       <div class="card-body">
-        <div class="phase"><div class="phase-label recruit">CROCODILE BREATHING</div>
-          <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-            <li>Lie face DOWN, forehead on hands</li>
-            <li>Breathe into the floor &mdash; belly pushes into ground, ribs expand laterally, back rises</li>
-            <li>Cannot be faked with accessory muscles</li>
-            <li>Slow cadence: 4-5 count in, 6-7 count out</li>
-            <li>5-6 breaths per round, 3 rounds</li>
-          </ul>
-        </div>
-        <div class="phase"><div class="phase-label release">REVERSE KEGELS</div>
-          <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-            <li>On each exhale: gently push outward/downward &mdash; like starting to urinate, very gently (10-20% effort)</li>
-            <li>Feel the pelvic floor descend and open</li>
-            <li>Hold 5-10 seconds, release and breathe normally</li>
-            <li>NOT bearing down hard. Gentle opening. The NS needs to learn this position is safe.</li>
-          </ul>
-        </div>
-        <div class="note"><strong>The tell it's working:</strong> Ribs expand AND pelvic floor drops on the same inhale. No throat. Through the nose.</div>
+        <div class="phase"><div class="phase-label recruit">CROCODILE</div><ul style="font-size:13px;color:var(--text-dim);padding-left:16px;"><li>Face DOWN, forehead on hands</li><li>Breathe into floor — belly pushes ground, ribs expand, back rises</li><li>4-5 count in, 6-7 count out. 3 rounds of 5-6 breaths.</li></ul></div>
+        <div class="phase"><div class="phase-label release">REVERSE KEGELS</div><ul style="font-size:13px;color:var(--text-dim);padding-left:16px;"><li>On exhale: gently push outward/downward, 10-20% effort</li><li>Feel the floor descend and open. Hold 5-10 sec.</li></ul></div>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>4. DCT &mdash; Symptom-Targeted</h3>
-        <span class="zone-tag">20-25 min</span>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>4. 3R — Zone Rotation</h3><span class="zone-tag">20-25 min</span></div>
       <div class="card-body">
-        <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-          <li><strong style="color:var(--text)">Before you start:</strong> Where is the tension right now?</li>
-          <li>Go to the <strong style="color:var(--accent)">SYMPTOMS</strong> tab to find your exercises</li>
-          <li>Pick 4-5 exercises. Full Recruit-Retain-Release on each.</li>
-          <li>Crocodile breaths between exercises.</li>
-          <li>This is not stretching. This is neuromuscular retraining. Resist during Release or you're wasting time.</li>
-        </ul>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Override with <strong style="color:var(--accent)">SYMPTOMS</strong> tab if something is screaming.</div>
+        <div class="schedule-item" data-dow="1"><span class="num">Mon</span> Z3+Z1 — Psoas + Adductors</div>
+        <div class="schedule-item" data-dow="2"><span class="num">Tue</span> Z2 — SI / Deep Rotators</div>
+        <div class="schedule-item" data-dow="3"><span class="num">Wed</span> Z4+Z5 — Quads + Hamstrings</div>
+        <div class="schedule-item" data-dow="4"><span class="num">Thu</span> Z3+Z2 — Psoas + Rotators</div>
+        <div class="schedule-item" data-dow="5"><span class="num">Fri</span> Z6+Z7+Z1 — Calves + Shins + Adductors</div>
+        <div class="schedule-item" data-dow="6"><span class="num">Sat</span> Whatever's talking</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">Pick 4-5 exercises from today's zones. Full Recruit-Retain-Release. Crocodile breaths between. Log each zone after.</div>
       </div>
     </div>
   </div>
 
   <div class="schedule-block" data-time="midday">
-    <h3>MIDDAY &mdash; While Working</h3>
-
+    <h3>MIDDAY</h3>
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>Desk Spinal Reset</h3>
-        <span class="zone-tag">every 45m</span>
-      </div>
-      <div class="card-body">
-        <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-          <li>Stand up. Feet hip-width.</li>
-          <li>Roll through the lumbar curve segment by segment &mdash; not just "sit up straight"</li>
-          <li>Cat-cow standing: round the spine fully, then extend fully. Feel each vertebra.</li>
-          <li>30 seconds. Restores the lumbar curve that sitting flattens.</li>
-          <li>This is what gives the pelvic floor space.</li>
-        </ul>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>Desk Spinal Reset</h3><span class="zone-tag">every 45m</span></div>
+      <div class="card-body"><p style="font-size:13px;color:var(--text-dim);">Stand. Roll through lumbar curve segment by segment. 30 sec.</p></div>
     </div>
-
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>Reverse Kegel Check-In</h3>
-        <span class="zone-tag">every 2-3h</span>
-      </div>
-      <div class="card-body">
-        <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-          <li>Wherever you are. Sitting, standing.</li>
-          <li>Inhale into the belly. As belly expands, gently push outward/downward.</li>
-          <li>10-20% effort. Feel the floor drop.</li>
-          <li>Hold 5-10 seconds. Release.</li>
-          <li>30 seconds total. Nobody can tell you're doing it.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>Short Foot Under Desk</h3>
-        <span class="zone-tag">as needed</span>
-      </div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text-dim);">Lift arch by pulling ball of foot toward heel &mdash; toes stay flat, don't curl. Hold 5 sec. Do it whenever you notice your feet flat. 10 seconds.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>10 Squats (Tension Spike)</h3>
-        <span class="zone-tag">as needed</span>
-      </div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text-dim);">Fastest tool in the box. Stand up, 10 bodyweight squats. Full depth, controlled. Shifts state immediately. Proven Session 2.</p>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>Reverse Kegel Check-In</h3><span class="zone-tag">every 2-3h</span></div>
+      <div class="card-body"><p style="font-size:13px;color:var(--text-dim);">Inhale belly, gentle push outward 10-20%. Hold 5-10 sec. 30 sec total.</p></div>
     </div>
   </div>
 
   <div class="schedule-block" data-time="lift">
-    <h3>LIFT DAYS &mdash; After Work</h3>
-    <div class="time">Mon / Tue / Thu / Fri</div>
-
+    <h3>LIFT — After Work</h3>
+    <div class="time">Mon / Wed / Fri — Rolling 4-day: D1→D2→D4→D5→repeat</div>
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>Warm-Up</h3>
-        <span class="zone-tag">10 min</span>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>Warm-Up → IRON → 3R Cooldown → Breathing</h3><span class="zone-tag">~60 min</span></div>
       <div class="card-body">
-        <div class="schedule-item"><span class="num">1</span> Light cardio <span class="dur">2-3 min</span></div>
-        <div class="schedule-item"><span class="num">2</span> Cat-cow &mdash; slow, segment by segment <span class="dur">8-10 reps</span></div>
-        <div class="schedule-item"><span class="num">3</span> Standing torso rotation <span class="dur">1 min</span></div>
-        <div class="schedule-item"><span class="num">4</span> Side bends <span class="dur">5 each</span></div>
-        <div class="schedule-item"><span class="num">5</span> Leg swings (front/back + side) <span class="dur">10 each</span></div>
-        <div class="schedule-item"><span class="num">6</span> Hip circles <span class="dur">10 each</span></div>
-        <div class="schedule-item"><span class="num">7</span> Deep squat hold <span class="dur">45 sec</span></div>
-        <div class="schedule-item"><span class="num">8</span> Breathing reset <span class="dur">1-2 min</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>IRON Session</h3>
-        <span class="zone-tag">30-45 min</span>
-      </div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Go to the <strong style="color:var(--accent)">IRON</strong> tab for today's program.</p>
-        <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-          <li>Brace on descent, release at top of EVERY rep</li>
-          <li>Conscious reverse kegel at lockout</li>
-          <li>If pelvic tension increases after workout &rarr; reduce load, more breathing</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>Post-Lift DCT Cooldown</h3>
-        <span class="zone-tag">10 min</span>
-      </div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">2 exercises matched to today's lift:</p>
-        <div class="schedule-item"><span class="num">D1</span> Lower (Squat): Pelvic Tuck + Pigeon</div>
-        <div class="schedule-item"><span class="num">D2</span> Upper (Push): Pelvic Tuck + your choice</div>
-        <div class="schedule-item"><span class="num">D4</span> Lower (Hinge): Forward Bend Wide + Hips Flexed</div>
-        <div class="schedule-item"><span class="num">D5</span> Upper (Pull): Pelvic Tuck + Extended Hips</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>Crocodile Breathing to Close</h3>
-        <span class="zone-tag">3 min</span>
-      </div>
-      <div class="card-body">
-        <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-          <li>Face down, forehead on hands</li>
-          <li>Breathe into the floor. Diaphragm is fatigued from bracing &mdash; train the release.</li>
-          <li>4-5 count in, 6-7 count out</li>
-          <li>Reverse kegel on each exhale</li>
-        </ul>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">See <strong style="color:var(--accent)">IRON</strong> tab for program.</p>
+        <p style="font-size:13px;color:var(--text-dim);">Post-lift 3R:</p>
+        <div class="schedule-item"><span class="num">D1</span> Squat: Pelvic Tuck + Pigeon</div>
+        <div class="schedule-item"><span class="num">D2</span> Push: Pelvic Tuck + choice</div>
+        <div class="schedule-item"><span class="num">D4</span> Hinge: Fwd Bend Wide + Hips Flexed</div>
+        <div class="schedule-item"><span class="num">D5</span> Pull: Pelvic Tuck + Extended Hips</div>
       </div>
     </div>
   </div>
 
   <div class="schedule-block" data-time="evening">
-    <h3>EVENING &mdash; Before Bed</h3>
+    <h3>EVENING — Before Bed</h3>
     <div class="time">15 min</div>
-
     <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>1. Pudendal Nerve Glides</h3>
-        <span class="zone-tag">5 min</span>
-      </div>
-      <div class="card-body">
-        <div class="phase"><div class="phase-label recruit">BASIC GLIDE</div>
-          <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-            <li>Sit on edge of chair, one sit bone off the edge (unweight the nerve on that side)</li>
-            <li>Extend the knee on the unweighted side</li>
-            <li>Flex the ankle (toes toward shin)</li>
-            <li>Gently nod chin to chest (adds neural tension from above)</li>
-            <li>Hold 2-3 seconds, release</li>
-            <li>10 reps each side</li>
-          </ul>
-        </div>
-        <div class="phase"><div class="phase-label release">PROGRESSION</div>
-          <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-            <li>Slump sitting + knee extension + ankle dorsiflexion</li>
-            <li>Scorpion stretch (ask PT about her approach)</li>
-          </ul>
-        </div>
-        <div class="note">Slides the pudendal nerve through Alcock's canal. Prevents adhesion, reduces compression sensitivity. Can pair reverse kegels between reps.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>2. Weighted Breathing + Reverse Kegels</h3>
-        <span class="zone-tag">7 min</span>
-      </div>
-      <div class="card-body">
-        <div class="phase"><div class="phase-label recruit">WEIGHTED BREATHING</div>
-          <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-            <li>Lie on back, 10-15 lb plate or heavy book on lower ribs</li>
-            <li>Breathe against the weight &mdash; diaphragm pushes it up</li>
-            <li>Progressive overload: heavier over time</li>
-            <li>3 sets of 10 breaths</li>
-          </ul>
-        </div>
-        <div class="phase"><div class="phase-label release">PAIR WITH REVERSE KEGELS</div>
-          <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-            <li>As ribs expand against weight, PF drops</li>
-            <li>Gentle 10-20% effort outward/downward on each exhale</li>
-            <li>Feel the coupling: diaphragm moves &rarr; PF follows</li>
-          </ul>
-        </div>
-        <div class="note">This is a dumbbell for the diaphragm. Strengthens the muscle that should be driving 15,000 PF mobilizations per day.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        <h3>3. Body Scan</h3>
-        <span class="zone-tag">3 min</span>
-      </div>
+      <div class="card-header" onclick="toggle(this)"><h3>1. Pudendal Nerve Glides</h3><span class="zone-tag">5 min</span></div>
       <div class="card-body">
         <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
-          <li>Eyes closed. Start at the feet.</li>
-          <li>Move attention slowly upward: calves, knees, thighs, pelvic floor, belly, chest, shoulders, jaw.</li>
-          <li>At each station, just notice. Don't fix. Don't judge.</li>
-          <li>Notice what shifted today vs when you woke up.</li>
-          <li>This is data, not performance.</li>
+          <li>Sit on edge, one sit bone off edge</li>
+          <li>Extend knee on unweighted side</li>
+          <li>Flex ankle, nod chin to chest</li>
+          <li>Hold 2-3 sec, release. 10 reps each side.</li>
         </ul>
       </div>
     </div>
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)"><h3>2. Weighted Breathing + Reverse Kegels</h3><span class="zone-tag">7 min</span></div>
+      <div class="card-body">
+        <ul style="font-size:13px;color:var(--text-dim);padding-left:16px;line-height:1.8;">
+          <li>Lie on back, 10-15 lb plate on lower ribs</li>
+          <li>Breathe against weight. 3 sets of 10 breaths.</li>
+          <li>Reverse kegel on each exhale.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)"><h3>3. Body Scan</h3><span class="zone-tag">3 min</span></div>
+      <div class="card-body"><p style="font-size:13px;color:var(--text-dim);">Eyes closed. Feet → calves → thighs → PF → belly → chest → shoulders → jaw. Just notice.</p></div>
+    </div>
   </div>
 
 </div>
 
-<!-- ==================== SYMPTOM MAP ==================== -->
+<!-- ==================== SYMPTOMS ==================== -->
 <div id="symptoms" class="page">
-
   <h2 class="section-title">What are you feeling?</h2>
-
   <div class="symptom-map">
-    <div class="symptom-row" onclick="filterAndSwitch('zone3')">
-      <div class="feel">Involuntary kegel / BC tension</div>
-      <div class="exercises">Pelvic Tuck &rarr; Sumo Squat &rarr; Side Lunge</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('zone2')">
-      <div class="feel">Scrotal nerve pain</div>
-      <div class="exercises">Pigeon &rarr; Pelvic Tuck &rarr; Hips Flexed</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('zone2')">
-      <div class="feel">SI joint stiffness</div>
-      <div class="exercises">Pigeon &rarr; Extended Hips &rarr; Hips Flexed</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('zone5')">
-      <div class="feel">Diffuse leg / hamstring tension</div>
-      <div class="exercises">Forward Bend Wide v2 &rarr; Side Squat &rarr; Pigeon</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('all')">
-      <div class="feel">General pelvic compression</div>
-      <div class="exercises">Pelvic Tuck &rarr; Sumo Squat &rarr; Pigeon &rarr; Forward Bend Wide</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('zone3')">
-      <div class="feel">Low back tightness</div>
-      <div class="exercises">Pelvic Tuck &rarr; Sliding Split &rarr; Quads Central</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('zone2')">
-      <div class="feel">Heel / shaft nerve line</div>
-      <div class="exercises">Pigeon &rarr; Pelvic Tuck &rarr; Belt Calf &rarr; Belt Shin</div>
-    </div>
-    <div class="symptom-row" onclick="filterAndSwitch('all')">
-      <div class="feel">Perineum / scrotum / sides of shaft</div>
-      <div class="exercises">Pelvic Tuck &rarr; Sliding Split &rarr; Pigeon &rarr; Sumo Squat &rarr; Extended Hips &rarr; Forward Bend Wide &rarr; Hips Flexed</div>
-    </div>
+    <div class="symptom-row" onclick="symptomFilter(['zone3','zone1'])"><div class="feel">Involuntary kegel / BC tension</div><div class="exercises">Pelvic Tuck → Sumo Squat → Side Lunge</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone2','zone3'])"><div class="feel">Scrotal nerve pain</div><div class="exercises">Pigeon → Pelvic Tuck → Hips Flexed</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone2'])"><div class="feel">SI joint stiffness</div><div class="exercises">Pigeon → Extended Hips → Hips Flexed</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone5','zone1','zone2'])"><div class="feel">Diffuse leg / hamstring tension</div><div class="exercises">Forward Bend Wide v2 → Side Squat → Pigeon</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone3','zone1','zone2'])"><div class="feel">General pelvic compression</div><div class="exercises">Pelvic Tuck → Sumo Squat → Pigeon → Forward Bend Wide</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone3','zone4'])"><div class="feel">Low back tightness</div><div class="exercises">Pelvic Tuck → Sliding Split → Quads Central</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone2','zone3','zone6','zone7'])"><div class="feel">Heel / shaft nerve line</div><div class="exercises">Pigeon → Pelvic Tuck → Belt Calf → Belt Shin</div></div>
+    <div class="symptom-row" onclick="symptomFilter(['zone3','zone2','zone1'])"><div class="feel">Perineum / scrotum / sides of shaft</div><div class="exercises">Pelvic Tuck → Sliding Split → Pigeon → Sumo Squat → Extended Hips → Fwd Bend Wide → Hips Flexed</div></div>
   </div>
-
-  <div class="note">Tap a symptom to jump to the exercise library filtered by relevant zone.</div>
-
+  <div class="note">Tap a symptom to see the exercises. Log each one after you do it.</div>
 </div>
 
-<!-- ==================== EXERCISE LIBRARY ==================== -->
+<!-- ==================== EXERCISES (placeholder - will port from site) ==================== -->
 <div id="exercises" class="page">
-
-  <div class="zone-filter" id="zoneFilter">
+  <div class="zone-filter">
     <button class="zone-btn active" onclick="filterZone('all')">ALL</button>
     <button class="zone-btn" onclick="filterZone('zone1')">ADDUCTORS</button>
     <button class="zone-btn" onclick="filterZone('zone2')">SI / ROTATORS</button>
-    <button class="zone-btn" onclick="filterZone('zone3')">PSOAS / HIP FLEX</button>
+    <button class="zone-btn" onclick="filterZone('zone3')">PSOAS</button>
     <button class="zone-btn" onclick="filterZone('zone4')">QUADS</button>
-    <button class="zone-btn" onclick="filterZone('zone5')">HAMSTRINGS</button>
+    <button class="zone-btn" onclick="filterZone('zone5')">HAMS</button>
     <button class="zone-btn" onclick="filterZone('zone6')">CALVES</button>
     <button class="zone-btn" onclick="filterZone('zone7')">SHINS</button>
   </div>
-
+  <div id="exerciseList">
   <!-- ZONE 3: Front Line / Psoas / Hip Flexors -->
   <h2 class="section-title" data-zone="zone3">FRONT LINE &mdash; PSOAS / HIP FLEXORS</h2>
 
@@ -705,7 +689,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lie on back, hips flexed 90&deg;</li><li>Interlace hands behind working thigh, hook other ankle over that ankle</li><li>Knees together, bent comfortably</li><li>Make top leg heavy (engages hamstring)</li><li>Kick lower leg toward ceiling while resisting with upper leg</li><li>Repeat until center-of-thigh fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Hold contraction with lower leg extended up. Pull firmly with hands under thigh for counterforce &mdash; don't let leg move toward chest.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist using upper leg tendon to overcome lower leg quad resistance. Slowly bring heel down and in toward hip. Only as far as comfortable.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone3">
@@ -754,7 +738,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lunge in front of wall/couch, back foot on surface, cushion knee</li><li>Hands on front leg, body back close to heel</li><li>Kick back foot into block &mdash; allow yourself to be pushed forward</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain fatigue/burn during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Use front leg to press body back toward heel, overcoming quad resistance. Chest up and slightly tilted back to isolate quads.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone3">
@@ -804,7 +788,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Kneel in front of wall/couch, back foot on surface, cushion knee</li><li>Hands on lower back, tuck tail</li><li>Slide front leg out as far as comfortable</li><li>Pull body back (hips over knees) while resisting</li><li>Keep front leg angle same throughout</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain fatigue/burn during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with hip flexors, slowly slide forward into split. Press back foot against block to activate entire front line. Stop if lower back overextends.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone3">
@@ -853,7 +837,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>High lunge, back heel off floor, slight knee bend</li><li>Tuck tail, hands on lower back</li><li>Scissor legs toward each other, press lower back with hands</li><li>Lift body out of lunge, back knee straightens</li><li>Repeat until hip flexor fatigue in rear leg</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Hands exaggerate posterior tilt. Maintain hip flexor burn.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Slowly lower into deep lunge while resisting. Chest high and upright, weight on back leg. Lower until back knee just above floor.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone3">
@@ -898,7 +882,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Kneel in lunge, front leg 90&deg;, back knee under hip</li><li>Tuck tail (posterior pelvic tilt) to isolate psoas</li><li>Hands on lower back, fingers toward sacrum, press to exaggerate tuck</li><li>Lunge forward without losing the tuck</li><li>Resist with front leg and hands, pull body back with hip flexors</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Re-tuck tail. Maintain fatigue/burn during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Hands add weight to hips, move forward into stretch while maintaining hip flexor contraction. Go as far as you can.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone3">
@@ -945,7 +929,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Kneel, back knee on pillow, front heel on slider</li><li>Hands on lower back, tail tucked</li><li>Slide front leg out as far as comfortable</li><li>Pull body back (hips over knee) while resisting</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain fatigue/burn during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with hip flexors, slowly slide forward into split. Only as far as you can while keeping butt down.</p></div>
-    </div>
+</div>
   </div>
 
   <!-- ZONE 1: Adductors -->
@@ -994,7 +978,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lunge position, front leg 90&deg;, back knee under hip</li><li>Move front leg to side at ~45&deg; from midline</li><li>Lunge diagonally forward, hips facing forward</li><li>Resist with front leg, pull body back over kneeling leg</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain adductor fatigue/burn during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist by cutting back knee toward front heel, moving diagonally forward. Keep hips neutral &mdash; don't bend/flex pelvis.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone1">
@@ -1047,7 +1031,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Wide stance, feet out ~45&deg;, knees aligned with feet</li><li>Hands on inside of knees</li><li>Squeeze knees inward AND pull heels toward each other (without moving)</li><li>Squat up to standing. Repeat until adductors burn.</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Keep adductors fatigued &mdash; continue scissoring feet, press hands into knees.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Continue squeezing knees + heels together as you slowly lower into deep squat. To deepen: reach chest forward and down, back straight, push knees back for leverage.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone1">
@@ -1091,7 +1075,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Wide stance, feet/knees slightly out</li><li>Shift to side, chest up, knee over foot, other leg straight</li><li>Arm extended for balance</li><li>Scissor extended leg toward bent leg via adductors</li><li>Engage adductors as you return to wide standing</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain adductor fatigue during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist, scissor feet together as you lunge sideways. Shift weight onto bent leg. Stop if sharp in hip joint.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone1">
@@ -1137,7 +1121,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Wide stance, toes slightly out, arms crossed at chest</li><li>Back straight, bend forward at hips</li><li>Scissor feet toward each other on floor (adductors engaged)</li><li>Press torso up to standing, back rigid</li><li>Repeat until inner thigh/hamstring fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Continue to scissor legs during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with adductors, slowly bend forward toward floor. Back straight, knees slightly bent. Stop if sharp in groin or hip joints.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone1">
@@ -1185,7 +1169,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Wide stance, feet far apart, toes slightly out</li><li>Hands on knees, back straight</li><li>Push feet toward each other on floor, knees slightly bent</li><li>Press hands into knees, lower into wide deep squat</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Continue scissoring feet, press hands into knees, actively flex knees.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Slowly straighten legs, pressing hands into knees for leverage to flatten back. Lift chest if lower back pressure.</p></div>
-    </div>
+</div>
   </div>
 
   <!-- ZONE 2: Lateral / SI / Deep Rotators -->
@@ -1234,7 +1218,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lie on side, hips flexed 90&deg;, knees bent 90&deg;</li><li>Support head with lower arm/pillow</li><li>Top hand on knee, arm slightly bent, foot flexed</li><li>Lift top leg away from bottom (abduct), keeping knee bent and foot flexed</li><li>Repeat until outer hip/glute fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Keep leg up (abducted), maintain glute fatigue.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Shift body weight through arm into leg, pressing leg back down. Advanced: extend lower knee, reach foot forward &mdash; moves stretch into upper glutes near pelvis/sacrum.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1273,7 +1257,7 @@ h2.section-title:first-child { margin-top: 0; }
         <text x="155" y="100" fill="#c9a96e" font-size="7" font-family="system-ui">glute med</text>
       </svg>
       <div class="phase"><div class="phase-label recruit">ISOMETRIC HOLD</div><ul><li>Lie on side, hips extended, top leg aligned with body</li><li>Rotate hips slightly forward (top knee points down) to target glute medius</li><li>Hook bottom foot over top ankle</li><li>Abduct top leg, lifting off floor</li><li>Hold isometric contraction until outer hip burns/tires</li><li>Do not allow cramping</li></ul></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1315,7 +1299,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lie on side, hips extended, lower leg slightly bent, upper leg straight</li><li>Top hand on mid-thigh, elbow slightly bent</li><li>Contract lats, press hand into thigh</li><li>Lift leg up and away from floor, body straight</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain fatigue in gluteus, keep leg up.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Press hand down on thigh (contracting lats), forcing leg to floor while continuing to resist with glute.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1362,7 +1346,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lie on side, lower hip extended, upper hip flexed, knees slightly bent</li><li>Open chest toward ceiling, lower hand on upper knee</li><li>Lift leg up and away, resist by locking arm and using lats/core</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain glute fatigue, keep leg up.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Lean body weight through arm into leg, overcoming glute resistance, pressing leg toward floor.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1409,7 +1393,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain glute burn/fatigue during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with glutes as you pull leg toward chest. If torso has lifted, flatten back first, then pull.</p></div>
       <div class="note"><strong>PREFERRED:</strong> Figure-4 variation. Cross ankle over opposite knee, use crossed leg as frame. Gets deeper into glutes without leaking to hamstring.</div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1464,7 +1448,7 @@ h2.section-title:first-child { margin-top: 0; }
         <ul><li>Same position. Let foot fall INWARD (toward midline, crossing over)</li><li>Bring it back to center slowly</li><li>10 slow reps each side.</li></ul>
       </div>
       <div class="note"><strong>Session 13 finding:</strong> Both directions hard. External rotators (obturator internus, piriformis) are short AND weak &mdash; locked tight but can't produce force through range. Internal rotation also restricted. Flag for PT Thursday. This is zero-equipment rotator strengthening.</div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1508,7 +1492,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Sit on floor, one leg bent 90&deg; in front, other extended behind</li><li>Extend chest along midline, back straight, close to floor</li><li>Press outside of bent knee against floor; let it push torso up</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain glute fatigue during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist while extending chest forward, crossing midline toward floor. Stop if pain in front knee.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1553,7 +1537,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Sit on floor, one leg straight, other crossed above knee</li><li>Hands on crossed knee, press toward floor</li><li>Lift knee up toward chest while resisting with hands</li><li>Repeat until outer hip (TFL) fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Knee close to chest, maintain fatigue/burn.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Lean body weight forward, slowly pressing knee down and away from chest. Should not be sharp in joint.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone2">
@@ -1600,7 +1584,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Sit on floor, one leg straight, other crossed above knee</li><li>Bend the straight leg to 90&deg;</li><li>Opposite hand on crossed knee, press to floor</li><li>Bring knee up toward chest while resisting</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Knee close to chest, maintain burn.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Use arm strength to press knee down and away while maintaining contraction.</p></div>
-    </div>
+</div>
   </div>
 
   <!-- ZONE 4: Quads (dedicated) -->
@@ -1651,7 +1635,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Stand hip-width, toes forward, arms crossed over chest</li><li>Lean forward, back straight, knees slightly bent</li><li>Contract hamstrings (as if bending knees but don't), press feet into floor</li><li>Press torso upward, back straight</li><li>Repeat until back-of-thigh fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain hamstring/calf activation. May not feel burn upright (posterior line is slack).</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Engage hamstrings/calves as you bend forward. Exaggerate lower back arch. Straighter knees = more intense. Don't let it get sharp.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1698,7 +1682,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Stand hip-width, toes forward, hands at knee height</li><li>Press hands into knees, contract hamstrings</li><li>Allow knees to slowly bend against hand resistance</li><li>Repeat until fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain hamstring/calf activation during transition.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Press knees from bent to locked while extending chest forward. Exaggerate lower back arch.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1747,7 +1731,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Stand hip-width, feet turned OUT as far as possible (duck stance)</li><li>Arms crossed, bend forward, back straight, knees locked</li><li>Contract hamstrings, press outer edges of feet into floor</li><li>Press torso up, back straight</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain lateral hamstring and fascia line activation.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Slowly bend back toward floor while resisting. Prevent sharp sensation along lateral tendons.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1796,7 +1780,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Stand hip-width, feet turned INWARD (pigeon-toed)</li><li>Arms crossed, bend forward, back straight, knees locked</li><li>Contract hamstrings, press toe tips into floor, slowly rotate feet back without moving them</li><li>Press torso up</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain activation through calves, lateral hamstrings, spiral line.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Slowly bend back toward floor while resisting. Prevent sharp sensation.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1840,7 +1824,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lie on back, working heel on slider, leg straight</li><li>Cross other ankle over knee, elbows on floor</li><li>Press elbows into floor (as if lifting hips but don't)</li><li>Slowly slide heel toward hip</li><li>Repeat until hamstring fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Heel close to hip, maintain burn. Advanced: lift hips (much more intense).</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with hamstrings, slowly slide heel away from hip. Press elbows harder for more resistance.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1883,7 +1867,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Stretch chest forward to comfortable position over straight front leg</li><li>Kick leg into floor to push torso away</li><li>Repeat until hamstring fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Continue kicking leg toward floor to maintain tendon connection.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with hamstrings, reach chest forward, back straight. Grab lower thigh and pull yourself toward leg for more resistance.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1927,7 +1911,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lunge forward, knee slightly bent</li><li>Externally rotate front leg (foot points away)</li><li>Reach chest forward over straight leg, back straight</li><li>Kick leg down, let resistance push torso up</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain lateral hamstring fatigue/burn.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Slowly extend chest over leg while resisting. Stop if sharp on side of knee.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -1971,7 +1955,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Lunge forward, knee slightly bent</li><li>Step to side at 45&deg; from midline, hips forward</li><li>Reach chest straight forward, back straight</li><li>Kick leg toward floor, push chest up</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain medial hamstring fatigue/burn.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Reach chest down and forward, back straight, body weight assists.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone5">
@@ -2016,7 +2000,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Kneel, back knee on pillow, front heel on slider</li><li>Lean chest forward, hands on front thigh, arch lower back</li><li>Slide front foot into split</li><li>Scissor front leg toward you while resisting</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain hamstring fatigue/burn.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist as you slide forward into split. Press hands on thigh, extend chest over front leg. Stop if sharp.</p></div>
-    </div>
+</div>
   </div>
 
   <!-- ZONE 6: Calves (belt-adapted) -->
@@ -2063,7 +2047,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Loop belt around ball of foot, hold both ends</li><li>Lie on back, leg up, knee slightly bent</li><li>Pull foot to flexed position with belt</li><li>Press foot down (point toes) against belt resistance</li><li>Repeat until calves burn</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Hold pointed position, maintain calf fatigue.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist with calf while pulling foot back to flexed with belt. Slow. Feel stretch in belly of calf, NOT Achilles. Stop if heel/Achilles twinge.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone6">
@@ -2105,7 +2089,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Loop belt around ball of foot, hold both ends</li><li>Lie on back, working leg extended along floor</li><li>Pull foot to flexed with belt</li><li>Press foot down against belt resistance</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Point foot as far as possible, maintain fatigue.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist while pulling foot back to flexed. Stop if heel/Achilles pain. If ankle pinches, do shin exercise first.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone6">
@@ -2148,7 +2132,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label retain">PRONATE</div><ul><li>Maintain calf contraction</li><li>Turn foot OUTWARD (away from midline)</li><li>Pull harder with outer hand</li><li>Hold 3-5 sec at end range</li></ul></div>
       <div class="phase"><div class="phase-label release">SUPINATE</div><ul><li>Maintain calf contraction</li><li>Slowly turn foot INWARD (toward midline)</li><li>Pull harder with inner hand</li><li>Hold 3-5 sec at end range</li><li>Repeat pronation/supination</li></ul></div>
       <div class="note">This hits the peroneals that support your arch. Directly relevant to flat feet.</div>
-    </div>
+</div>
   </div>
 
   <!-- ZONE 7: Shins (belt-adapted) -->
@@ -2195,7 +2179,7 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Belt looped over top of foot, toes extended</li><li>Lie on back, leg up, knee slightly bent</li><li>Foot pointed (starting position)</li><li>Flex foot back (toes toward shin) against belt resistance</li><li>Repeat until shin fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Pull foot back (flexed), maintain shin burn. Don't over-bend knee.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist as you pull foot from flexed to pointed. Stop when sensation shifts from shin to ankle and becomes sharp &mdash; that's your end range.</p></div>
-    </div>
+</div>
   </div>
 
   <div class="card" data-zone="zone7">
@@ -2242,278 +2226,339 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="phase"><div class="phase-label recruit">RECRUIT</div><ul><li>Belt over top of foot covering toes</li><li>Lie on back, leg up, knee slightly flexed</li><li>Foot pointed (starting position)</li><li>Flex foot back, guiding toes with belt</li><li>Repeat until foot/ankle/shin fatigue</li></ul></div>
       <div class="phase"><div class="phase-label retain">RETAIN</div><p>Maintain burn in foot/ankle/shin. Don't over-bend knee.</p></div>
       <div class="phase"><div class="phase-label release">RELEASE</div><p>Resist while pulling foot from flexed to pointed. Straighten knee to intensify. Stop when sensation shifts to sharp at ankle.</p></div>
-    </div>
+</div>
   </div>
 
+  </div>
 </div>
 
 <!-- ==================== IRON ==================== -->
 <div id="iron" class="page">
-
   <h2 class="section-title">WEEK SCHEDULE</h2>
   <div class="info-block">
-    <strong>Mon:</strong> Day 1 Lower (Squat) &nbsp;|&nbsp;
-    <strong>Tue:</strong> Day 2 Upper (Push) &nbsp;|&nbsp;
-    <strong>Wed:</strong> Rest &nbsp;|&nbsp;
-    <strong>Thu:</strong> Day 4 Lower (Hinge) &nbsp;|&nbsp;
-    <strong>Fri:</strong> Day 5 Upper (Pull)
+    <strong>M / W / F:</strong> Rolling 4-day. D1 (Squat) → D2 (Push) → D4 (Hinge) → D5 (Pull) → repeat. Just do the next one.
   </div>
 
-  <h2 class="section-title">DAY 1 &mdash; LOWER (SQUAT)</h2>
-  <div class="card open">
-    <div class="card-body" style="display:block; padding-top:12px;">
-      <table class="lift-table">
-        <tr><th>Exercise</th><th>Sets x Reps</th></tr>
-        <tr><td>Back Squat</td><td>3x5-8</td></tr>
-        <tr><td>Bulgarian Split Squat</td><td>3x8 each</td></tr>
-        <tr><td>Hip Thrust</td><td>3x10</td></tr>
-        <tr><td>DB Romanian Deadlift</td><td>2x12</td></tr>
-        <tr><td>Lateral Raises</td><td>3x15</td></tr>
-      </table>
-    </div>
-  </div>
+  <h2 class="section-title">DAY 1 — LOWER (SQUAT)</h2>
+  <div class="card open"><div class="card-body" style="display:block;padding-top:12px;">
+    <table class="lift-table"><tr><th>Exercise</th><th>Sets x Reps</th><th>Working</th></tr>
+    <tr><td>Back Squat</td><td>3x5-8</td><td style="color:var(--accent)">205x5</td></tr>
+    <tr><td>Bulgarian Split Squat</td><td>3x8 each</td><td style="color:var(--accent)">25 DBs</td></tr>
+    <tr><td>Hip Thrust</td><td>3x10</td><td style="color:var(--accent)">185x12</td></tr>
+    <tr><td>DB Romanian Deadlift</td><td>2x12</td><td style="color:var(--accent)">60 DBs</td></tr>
+    <tr><td>Lateral Raises</td><td>3x15</td><td style="color:var(--accent)">20</td></tr></table>
+  </div></div>
 
-  <h2 class="section-title">DAY 2 &mdash; UPPER (PUSH)</h2>
-  <div class="card open">
-    <div class="card-body" style="display:block; padding-top:12px;">
-      <table class="lift-table">
-        <tr><th>Exercise</th><th>Sets x Reps</th></tr>
-        <tr><td>Bench Press</td><td>3x6-10</td></tr>
-        <tr><td>Incline DB Press</td><td>3x8-10</td></tr>
-        <tr><td>Overhead Press</td><td>3x6-10</td></tr>
-        <tr><td>Lateral Raises</td><td>3x15</td></tr>
-        <tr><td>Rear Delt Fly</td><td>3x15</td></tr>
-        <tr><td>Triceps Pushdown</td><td>3x12</td></tr>
-      </table>
-    </div>
-  </div>
+  <h2 class="section-title">DAY 2 — UPPER (PUSH)</h2>
+  <div class="card open"><div class="card-body" style="display:block;padding-top:12px;">
+    <table class="lift-table"><tr><th>Exercise</th><th>Sets x Reps</th><th>Working</th></tr>
+    <tr><td>Bench Press</td><td>3x6-10</td><td style="color:var(--accent)">185x7</td></tr>
+    <tr><td>Incline DB Press</td><td>3x8-10</td><td style="color:var(--accent)">70x5.5</td></tr>
+    <tr><td>Overhead Press</td><td>3x6-10</td><td style="color:var(--accent)">95x6</td></tr>
+    <tr><td>Lateral Raises</td><td>3x15</td><td style="color:var(--accent)">30x7</td></tr>
+    <tr><td>Rear Delt Fly</td><td>3x15</td><td style="color:var(--accent)">20x15</td></tr>
+    <tr><td>Triceps Pushdown</td><td>3x12</td><td style="color:var(--accent)">110x10</td></tr></table>
+  </div></div>
 
-  <h2 class="section-title">DAY 4 &mdash; LOWER (HINGE)</h2>
-  <div class="card open">
-    <div class="card-body" style="display:block; padding-top:12px;">
-      <table class="lift-table">
-        <tr><th>Exercise</th><th>Sets x Reps</th></tr>
-        <tr><td>Deadlift</td><td>3x4-6</td></tr>
-        <tr><td>Walking Lunges</td><td>3x10 each</td></tr>
-        <tr><td>Glute Bridge</td><td>3x12</td></tr>
-        <tr><td>Cossack Squat</td><td>2x8 each</td></tr>
-        <tr><td>Dead Bugs</td><td>2 sets</td></tr>
-      </table>
-    </div>
-  </div>
+  <h2 class="section-title">DAY 4 — LOWER (HINGE)</h2>
+  <div class="card open"><div class="card-body" style="display:block;padding-top:12px;">
+    <table class="lift-table"><tr><th>Exercise</th><th>Sets x Reps</th><th>Working</th></tr>
+    <tr><td>Deadlift</td><td>3x4-6</td><td style="color:var(--accent)">235x5</td></tr>
+    <tr><td>Walking Lunges</td><td>2x12 each</td><td style="color:var(--accent)">35 DBs</td></tr>
+    <tr><td>Glute Bridge</td><td>3x12</td><td style="color:var(--accent)">205x12</td></tr>
+    <tr><td>Cossack Squat</td><td>2x8 each</td><td style="color:var(--accent)">35</td></tr>
+    <tr><td>Dead Bugs</td><td>2 sets</td><td style="color:var(--accent)">BW</td></tr></table>
+  </div></div>
 
-  <h2 class="section-title">DAY 5 &mdash; UPPER (PULL)</h2>
-  <div class="card open">
-    <div class="card-body" style="display:block; padding-top:12px;">
-      <table class="lift-table">
-        <tr><th>Exercise</th><th>Sets x Reps</th></tr>
-        <tr><td>Pull-Ups / Lat Pulldown</td><td>3x6-10</td></tr>
-        <tr><td>Cable Row</td><td>3x10</td></tr>
-        <tr><td>Face Pulls</td><td>3x15</td></tr>
-        <tr><td>Bicep Curls</td><td>3x10</td></tr>
-        <tr><td>Hammer Curls</td><td>3x10</td></tr>
-        <tr><td>Rear Delt Fly</td><td>2x15</td></tr>
-      </table>
-    </div>
-  </div>
+  <h2 class="section-title">DAY 5 — UPPER (PULL)</h2>
+  <div class="card open"><div class="card-body" style="display:block;padding-top:12px;">
+    <table class="lift-table"><tr><th>Exercise</th><th>Sets x Reps</th><th>Working</th></tr>
+    <tr><td>Pull-Ups</td><td>3x6-10</td><td style="color:var(--accent)">BWx8/7</td></tr>
+    <tr><td>Cable Row</td><td>3x10</td><td style="color:var(--accent)">160x7</td></tr>
+    <tr><td>Face Pulls</td><td>3x15</td><td style="color:var(--accent)">100x7</td></tr>
+    <tr><td>Bicep Curls</td><td>3x10</td><td style="color:var(--accent)">—</td></tr>
+    <tr><td>Hammer Curls</td><td>3x10</td><td style="color:var(--accent)">40x7</td></tr>
+    <tr><td>Rear Delt Fly</td><td>2x15</td><td style="color:var(--accent)">20x15</td></tr></table>
+  </div></div>
 
   <h2 class="section-title">SQUAT CUES</h2>
   <ul class="cue-list">
-    <li><span class="cue-name">Brace the cylinder:</span> Big breath into belt line &mdash; ribs, obliques, back. Protects spine WITHOUT clenching PF.</li>
-    <li><span class="cue-name">Spread the floor:</span> Feet screw outward into ground. Activates glutes, unloads low back.</li>
-    <li><span class="cue-name">Chest over hips:</span> Don't tip forward. Keeps lumbar curve intact.</li>
-    <li><span class="cue-name">Tripod foot:</span> Big toe base, pinky toe base, center of heel. All three grounded.</li>
-    <li><span class="cue-name">Drive through heels:</span> On the way up, push through back half of foot.</li>
+    <li><span class="cue-name">Brace the cylinder:</span> Big breath into belt line. Protects spine WITHOUT clenching PF.</li>
+    <li><span class="cue-name">Spread the floor:</span> Feet screw outward. Activates glutes.</li>
+    <li><span class="cue-name">Chest over hips:</span> No tipping forward. Lumbar curve intact.</li>
+    <li><span class="cue-name">Tripod foot:</span> Big toe, pinky toe, center heel. All three.</li>
+    <li><span class="cue-name">Drive through heels:</span> Back half of foot on the way up.</li>
     <li><span class="cue-name">Grab the floor:</span> Spread toes and grip. Fires the arch.</li>
-    <li><span class="cue-name">Release at top:</span> Every rep &mdash; lockout, exhale, let the floor drop.</li>
+    <li><span class="cue-name">Release at top:</span> Lockout, exhale, let the floor drop.</li>
   </ul>
-
-  <h2 class="section-title">HINGE CUES</h2>
-  <ul class="cue-list">
-    <li><span class="cue-name">Door hinge, not fold:</span> Torso tips forward but spine stays rigid. Bend at the hip joint, not the lumbar.</li>
-    <li><span class="cue-name">Ass BACK:</span> Push hips back like closing a car door.</li>
-    <li><span class="cue-name">Pack the lats:</span> Shoulders down and back. Protects the spine under pull.</li>
-    <li><span class="cue-name">Release at top:</span> Same as squat. Lockout, exhale, floor drops.</li>
-  </ul>
-
-  <h2 class="section-title">WARM-UP</h2>
-  <div class="card open">
-    <div class="card-body" style="display:block; padding-top:12px;">
-      <div class="schedule-item"><span class="num">1</span> Light cardio <span class="dur">2-3 min</span></div>
-      <div class="schedule-item"><span class="num">2</span> Cat-cow &mdash; slow, segment by segment <span class="dur">8-10 reps</span></div>
-      <div class="schedule-item"><span class="num">3</span> Standing torso rotation <span class="dur">1 min</span></div>
-      <div class="schedule-item"><span class="num">4</span> Side bends <span class="dur">5 each</span></div>
-      <div class="schedule-item"><span class="num">5</span> Leg swings (front/back + side) <span class="dur">10 each</span></div>
-      <div class="schedule-item"><span class="num">6</span> Hip circles <span class="dur">10 each</span></div>
-      <div class="schedule-item"><span class="num">7</span> Deep squat hold <span class="dur">45 sec</span></div>
-      <div class="schedule-item"><span class="num">8</span> Breathing reset <span class="dur">1-2 min</span></div>
-    </div>
-  </div>
-
 </div>
 
 <!-- ==================== FEET ==================== -->
 <div id="feet" class="page">
-
   <h2 class="section-title">WHY FEET MATTER</h2>
-  <div class="info-block">
-    <strong>Flat feet = no arch = posterior chain has no foundation.</strong> Calves compensate, hamstrings shorten, pelvic floor grips. The Deep Front Line runs from foot arches up through inner calves, adductors, psoas, diaphragm, to jaw. The pelvic floor sits in the middle. Building the feet builds the floor under the floor.
-    <br><br>
-    <strong>The heel-to-shaft nerve connection:</strong> The pudendal nerve branches share pathways with the posterior tibial nerve through the heel. Flat feet and weak intrinsics mean the whole chain compensates upward.
-  </div>
-
-  <h2 class="section-title">DAILY FOOT WORK (5 MIN)</h2>
-
-  <div class="foot-exercise">
-    <h4>Short Foot</h4>
-    <p>Standing. Lift arch by pulling ball of foot toward heel &mdash; toes stay flat, don't curl. Hold 5 sec.</p>
-    <div class="reps">10 each foot</div>
-  </div>
-
-  <div class="foot-exercise">
-    <h4>Towel Scrunches</h4>
-    <p>Towel on floor. Curl toes to scrunch it toward you.</p>
-    <div class="reps">2 min continuous</div>
-  </div>
-
-  <div class="foot-exercise">
-    <h4>Toe Yoga</h4>
-    <p>Lift big toe only, press small toes down. Then reverse &mdash; small toes up, big toe down.</p>
-    <div class="reps">10 each pattern</div>
-  </div>
-
-  <div class="foot-exercise">
-    <h4>Single Leg Balance</h4>
-    <p>Stand on one foot. 30 sec. Feel the arch work.</p>
-    <div class="reps">30 sec each foot</div>
-  </div>
-
-  <h2 class="section-title">UNDER-DESK ACTIVATION</h2>
-  <div class="info-block">
-    Short foot activation &mdash; lift arch without curling toes. Do it whenever you notice your feet flat under the desk. Takes 10 seconds.
-  </div>
-
+  <div class="info-block"><strong>Flat feet = no arch = posterior chain has no foundation.</strong> Deep Front Line: foot arches → inner calves → adductors → psoas → diaphragm → jaw. PF sits in the middle.</div>
+  <h2 class="section-title">DAILY FOOT WORK</h2>
+  <div class="foot-exercise"><h4>Short Foot</h4><p>Lift arch, pull ball toward heel, toes flat. Hold 5 sec.</p><div class="reps">10 each foot</div></div>
+  <div class="foot-exercise"><h4>Towel Scrunches</h4><p>Curl toes to scrunch towel toward you.</p><div class="reps">2 min</div></div>
+  <div class="foot-exercise"><h4>Toe Yoga</h4><p>Big toe up / small toes down, then reverse.</p><div class="reps">10 each</div></div>
+  <div class="foot-exercise"><h4>Single Leg Balance</h4><p>Stand on one foot. Feel the arch.</p><div class="reps">30 sec each</div></div>
 </div>
 
-<!-- ==================== MONKEY BARS ==================== -->
+<!-- ==================== BARS ==================== -->
 <div id="bars" class="page">
-
   <h2 class="section-title">WHY BARS</h2>
-  <div class="info-block">
-    Hanging engages the <strong>entire front fascial line</strong> &mdash; the same line compressing the pelvic floor. Arms overhead, body hanging, the deep front line gets a full-body stretch under load. Your pull-up bar works.
-  </div>
-
+  <div class="info-block">Hanging engages the <strong>entire front fascial line</strong> — the same line that connects to the pelvic floor. Pull-up bar works.</div>
   <h2 class="section-title">PROGRESSION</h2>
+  <div class="monkey-level"><span class="lvl">L1</span><div><strong>Simple Hang</strong><br><span style="color:var(--text-dim);font-size:12px;">Keep tension. Don't relax.</span></div></div>
+  <div class="monkey-level"><span class="lvl">L2</span><div><strong>Side-to-Side Swing</strong><br><span style="color:var(--text-dim);font-size:12px;">Alternate pulling one arm then the other.</span></div></div>
+  <div class="monkey-level"><span class="lvl">L3</span><div><strong>Knee Swing</strong><br><span style="color:var(--text-dim);font-size:12px;">Hold tension in front of body to lengthen front line.</span></div></div>
+  <div class="monkey-level"><span class="lvl">L4</span><div><strong>Hanging Twist</strong><br><span style="color:var(--text-dim);font-size:12px;">Add rotation.</span></div></div>
+  <div class="monkey-level"><span class="lvl">L5</span><div><strong>Full Traversal</strong><br><span style="color:var(--text-dim);font-size:12px;">Whole body swing force.</span></div></div>
+</div>
 
-  <div class="monkey-level"><span class="lvl">L1</span><div><strong>Simple Hang</strong><br><span style="color:var(--text-dim);font-size:12px;">Arms shoulder-width, hang without relaxing lower back or shoulders. Keep tension.</span></div></div>
-  <div class="monkey-level"><span class="lvl">L2</span><div><strong>Side-to-Side Swing</strong><br><span style="color:var(--text-dim);font-size:12px;">Alternate pulling with one arm then the other. Amplify by bending one arm up then the other.</span></div></div>
-  <div class="monkey-level"><span class="lvl">L3</span><div><strong>Knee Swing</strong><br><span style="color:var(--text-dim);font-size:12px;">Swing with knees, hold tension in front of body to lengthen front line.</span></div></div>
-  <div class="monkey-level"><span class="lvl">L4</span><div><strong>Hanging Twist</strong><br><span style="color:var(--text-dim);font-size:12px;">Add rotation. If easy, add arm pull.</span></div></div>
-  <div class="monkey-level"><span class="lvl">L5</span><div><strong>Full Traversal</strong><br><span style="color:var(--text-dim);font-size:12px;">Use whole body for swing force. Skip intermediate bars for more strength.</span></div></div>
-
-  <h2 class="section-title">SAFETY</h2>
-  <ul class="cue-list">
-    <li>Monitor grip strength &mdash; back off when grip starts to slip</li>
-    <li>Absorb landing with knees (shock absorbers)</li>
-    <li>Don't just relax &mdash; keep tension on bars at all times</li>
-    <li>Pay attention to the eccentric phase (legs swinging forward then behind)</li>
-    <li>Add on days when hands feel strong. Won't interfere with DCT.</li>
-  </ul>
-
+<!-- ==================== HISTORY ==================== -->
+<div id="history" class="page">
+  <h2 class="section-title">ZONE LOG</h2>
+  <div id="historyList"><p class="info-block">Loading...</p></div>
 </div>
 
 <script>
-// Time awareness — highlight current block
-function updateTimeBlock() {
-  var h = new Date().getHours();
-  var blocks = document.querySelectorAll('.schedule-block[data-time]');
-  blocks.forEach(function(b) { b.classList.remove('now','past'); });
+// ==================== SUPABASE ====================
+const SUPABASE_URL = 'https://dxhkrjpuwyyorgusgmwy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_KhGB9asG26UuJ0SVL_14Rg_7txSHFsj';
+let sb;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.log('Supabase not connected yet'); }
 
-  blocks.forEach(function(b) {
-    var t = b.dataset.time;
-    if (t === 'morning') {
-      if (h >= 6 && h < 9) b.classList.add('now');
-      else if (h >= 9) b.classList.add('past');
-    } else if (t === 'midday') {
-      if (h >= 9 && h < 17) b.classList.add('now');
-      else if (h >= 17) b.classList.add('past');
-    } else if (t === 'lift') {
-      if (h >= 17 && h < 20) b.classList.add('now');
-      else if (h >= 20) b.classList.add('past');
-    } else if (t === 'evening') {
-      if (h >= 20 || h < 1) b.classList.add('now');
-      else if (h >= 1 && h < 6) b.classList.add('past');
-    }
+// ==================== ZONE LOGGING ====================
+async function logZone(zone, exercise) {
+  if (!sb || SUPABASE_KEY === 'ANON_KEY_HERE') {
+    alert('Supabase not connected yet');
+    return;
+  }
+  const btn = event.target;
+  btn.textContent = '...';
+  const { error } = await sb.from('zone_log').insert({
+    zone: zone,
+    exercise: exercise,
+    logged_at: new Date().toISOString()
+  });
+  if (error) {
+    console.error(error);
+    btn.textContent = 'ERROR';
+    return;
+  }
+  btn.textContent = 'LOGGED ✓';
+  btn.classList.add('logged');
+  loadWeekCounts();
+}
+
+async function loadWeekCounts() {
+  if (!sb || SUPABASE_KEY === 'ANON_KEY_HERE') return;
+  // Get start of current week (Monday)
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const weekStart = new Date(now.setDate(diff));
+  weekStart.setHours(0,0,0,0);
+
+  const { data, error } = await sb
+    .from('zone_log')
+    .select('zone')
+    .gte('logged_at', weekStart.toISOString());
+
+  if (error || !data) return;
+
+  const counts = {};
+  data.forEach(r => { counts[r.zone] = (counts[r.zone] || 0) + 1; });
+
+  ['zone1','zone2','zone3','zone4','zone5','zone6','zone7','feet'].forEach(z => {
+    const el = document.getElementById('zc-' + z);
+    const pill = el.closest('.zone-pill');
+    const c = counts[z] || 0;
+    el.textContent = c;
+    pill.classList.toggle('hit', c > 0);
+    pill.classList.toggle('hot', c >= 3);
   });
 }
-updateTimeBlock();
-setInterval(updateTimeBlock, 60000);
 
+async function loadHistory() {
+  if (!sb || SUPABASE_KEY === 'ANON_KEY_HERE') {
+    document.getElementById('historyList').innerHTML = '<p class="info-block">Connect Supabase to see history.</p>';
+    return;
+  }
+  const { data, error } = await sb
+    .from('zone_log')
+    .select('*')
+    .order('logged_at', { ascending: false })
+    .limit(100);
+
+  if (error || !data || data.length === 0) {
+    document.getElementById('historyList').innerHTML = '<p class="info-block">No logs yet. Do some exercises and log them.</p>';
+    return;
+  }
+
+  let html = '';
+  let currentDate = '';
+  data.forEach(r => {
+    const d = new Date(r.logged_at);
+    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (dateStr !== currentDate) {
+      if (currentDate) html += '</div>';
+      html += '<div class="history-day"><div class="history-date">' + dateStr + '</div>';
+      currentDate = dateStr;
+    }
+    html += '<div class="history-entry"><span class="h-zone">' + r.zone + '</span><span class="h-exercise">' + r.exercise + '</span><span class="h-time">' + timeStr + '</span></div>';
+  });
+  html += '</div>';
+  document.getElementById('historyList').innerHTML = html;
+}
+
+// ==================== TIME AWARENESS ====================
+function updateTimeBlock() {
+  var h = new Date().getHours();
+  document.querySelectorAll('.schedule-block[data-time]').forEach(function(b) {
+    b.classList.remove('now','past');
+    var t = b.dataset.time;
+    if (t === 'morning' && h >= 5 && h < 9) b.classList.add('now');
+    else if (t === 'morning' && h >= 9) b.classList.add('past');
+    else if (t === 'midday' && h >= 9 && h < 17) b.classList.add('now');
+    else if (t === 'midday' && h >= 17) b.classList.add('past');
+    else if (t === 'lift' && h >= 17 && h < 20) b.classList.add('now');
+    else if (t === 'lift' && h >= 20) b.classList.add('past');
+    else if (t === 'evening' && (h >= 20 || h < 1)) b.classList.add('now');
+  });
+}
+
+// ==================== NAV ====================
 function show(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b => {
-    if(b.textContent.toLowerCase().replace(/\s/g,'') === id ||
-       (id === 'exercises' && b.textContent === 'EXERCISES') ||
-       (id === 'daily' && b.textContent === 'DAILY') ||
-       (id === 'symptoms' && b.textContent === 'SYMPTOMS') ||
-       (id === 'iron' && b.textContent === 'IRON') ||
-       (id === 'feet' && b.textContent === 'FEET') ||
-       (id === 'bars' && b.textContent === 'BARS'))
-      b.classList.add('active');
-  });
+  var labels = {daily:'DAILY',symptoms:'SYMPTOMS',exercises:'EXERCISES',iron:'IRON',feet:'FEET',bars:'BARS',history:'LOG'};
+  document.querySelectorAll('nav button').forEach(b => { if(b.textContent === labels[id]) b.classList.add('active'); });
+  if (id === 'history') loadHistory();
   window.scrollTo(0,0);
 }
 
-function toggle(el) {
-  el.closest('.card').classList.toggle('open');
+function toggle(el) { el.closest('.card').classList.toggle('open'); }
+
+function goToTodayExercises() {
+  show('exercises');
+  if(window._todayFilter) filterMultiZone(window._todayFilter);
+}
+
+function symptomFilter(zones) {
+  show('exercises');
+  filterMultiZone(zones);
+}
+
+function filterMultiZone(zones) {
+  if(zones.includes('all')) { filterZone('all'); return; }
+  document.querySelectorAll('.zone-btn').forEach(b => {
+    b.classList.remove('active');
+    var map = {'ADDUCTORS':'zone1','SI / ROTATORS':'zone2','PSOAS':'zone3','QUADS':'zone4','HAMS':'zone5','CALVES':'zone6','SHINS':'zone7','ALL':'all'};
+    if(zones.includes(map[b.textContent])) b.classList.add('active');
+  });
+  // Hide everything first
+  document.querySelectorAll('#exercises .card').forEach(function(card) { card.style.display = 'none'; });
+  document.querySelectorAll('#exercises .section-title').forEach(function(title) { title.style.display = 'none'; });
+  document.querySelectorAll('#exercises .info-block').forEach(function(block) { block.style.display = 'none'; });
+  // Show matching in zone priority order by reordering DOM
+  var container = document.getElementById('exercises');
+  var filterBar = container.querySelector('.zone-filter');
+  zones.forEach(function(z) {
+    document.querySelectorAll('#exercises .section-title[data-zone="'+z+'"]').forEach(function(title) {
+      title.style.display = '';
+      container.appendChild(title);
+    });
+    document.querySelectorAll('#exercises .card[data-zone="'+z+'"]').forEach(function(card) {
+      card.style.display = '';
+      container.appendChild(card);
+    });
+  });
+  // Keep filter bar at top
+  container.insertBefore(filterBar, container.firstChild);
 }
 
 function filterZone(zone) {
-  document.querySelectorAll('.zone-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-
-  document.querySelectorAll('#exercises .card').forEach(card => {
+  document.querySelectorAll('.zone-btn').forEach(b => {
+    b.classList.remove('active');
+    if((zone === 'all' && b.textContent === 'ALL') ||
+       (zone === 'zone1' && b.textContent === 'ADDUCTORS') ||
+       (zone === 'zone2' && b.textContent.includes('SI')) ||
+       (zone === 'zone3' && b.textContent === 'PSOAS') ||
+       (zone === 'zone4' && b.textContent === 'QUADS') ||
+       (zone === 'zone5' && b.textContent === 'HAMS') ||
+       (zone === 'zone6' && b.textContent === 'CALVES') ||
+       (zone === 'zone7' && b.textContent === 'SHINS'))
+      b.classList.add('active');
+  });
+  document.querySelectorAll('#exercises .card').forEach(function(card) {
     if(zone === 'all' || card.dataset.zone === zone) {
       card.style.display = '';
     } else {
       card.style.display = 'none';
     }
   });
-  document.querySelectorAll('#exercises .section-title').forEach(title => {
+  document.querySelectorAll('#exercises .section-title').forEach(function(title) {
     if(zone === 'all' || title.dataset.zone === zone) {
       title.style.display = '';
     } else {
       title.style.display = 'none';
     }
   });
-  document.querySelectorAll('#exercises .info-block').forEach(block => {
-    if(zone === 'all' || zone === 'zone4') {
-      block.style.display = '';
-    } else {
-      block.style.display = 'none';
+}
+
+// ==================== TODAY'S ZONE ====================
+function updateTodayZone() {
+  var dow = new Date().getDay(); // 0=Sun,1=Mon...
+  var zones = {
+    1: {label:'TODAY: Z3+Z1 — Psoas + Adductors', filter:['zone3','zone1']},
+    2: {label:'TODAY: Z2 — SI / Deep Rotators', filter:['zone2']},
+    3: {label:'TODAY: Z4+Z5 — Quads + Hamstrings', filter:['zone4','zone5']},
+    4: {label:'TODAY: Z3+Z2 — Psoas + Rotators', filter:['zone3','zone2']},
+    5: {label:'TODAY: Z6+Z7+Z1 — Calves + Shins + Adductors', filter:['zone6','zone7','zone1']},
+    6: {label:'TODAY: Symptom-Targeted (flex day)', filter:['all']},
+    0: {label:'REST DAY', filter:['all']}
+  };
+  var today = zones[dow] || zones[0];
+  window._todayFilter = today.filter;
+  var el = document.getElementById('todayZone');
+  if(el) {
+    el.innerHTML = today.label + '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">TAP TO START \u2192 exercises</div>';
+  }
+  // Highlight today's row in the rotation
+  document.querySelectorAll('.schedule-item[data-dow]').forEach(function(row){
+    if(parseInt(row.dataset.dow) === dow) {
+      row.style.background = 'var(--surface2)';
+      row.style.borderRadius = '6px';
+      row.style.padding = '6px 8px';
+      row.style.fontWeight = '600';
+      row.style.color = 'var(--accent)';
     }
   });
 }
 
-function filterAndSwitch(zone) {
-  show('exercises');
-  filterZone(zone);
-  // Update filter buttons
-  document.querySelectorAll('.zone-btn').forEach(b => {
-    b.classList.remove('active');
-    if((zone === 'all' && b.textContent === 'ALL') ||
-       (zone === 'zone1' && b.textContent === 'ADDUCTORS') ||
-       (zone === 'zone2' && b.textContent.includes('SI')) ||
-       (zone === 'zone3' && b.textContent.includes('PSOAS')) ||
-       (zone === 'zone4' && b.textContent === 'QUADS') ||
-       (zone === 'zone5' && b.textContent.includes('HAM')) ||
-       (zone === 'zone6' && b.textContent === 'CALVES') ||
-       (zone === 'zone7' && b.textContent === 'SHINS'))
-      b.classList.add('active');
-  });
-}
+// ==================== ADD LOG BUTTONS TO EXERCISE CARDS ====================
+document.querySelectorAll('#exercises .card[data-zone]').forEach(function(card) {
+  var zone = card.dataset.zone;
+  var name = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : 'unknown';
+  var body = card.querySelector('.card-body');
+  if (body) {
+    var btn = document.createElement('button');
+    btn.className = 'log-btn';
+    btn.textContent = 'LOG ✓';
+    btn.onclick = function(e) { e.stopPropagation(); logZone(zone, name); };
+    body.appendChild(btn);
+  }
+});
+
+// ==================== INIT ====================
+updateTimeBlock();
+updateTodayZone();
+setInterval(updateTimeBlock, 60000);
+loadWeekCounts();
 </script>
 
 </body>
